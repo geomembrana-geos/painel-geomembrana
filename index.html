@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cálculo Geomembrana</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f2f5;padding:14px}
+.wrap{max-width:480px;margin:0 auto}
+.hdr{background:#1a1a1a;padding:16px 20px;border-radius:12px 12px 0 0}
+.hdr h1{font-size:15px;font-weight:700;color:#ff6b00}
+.hdr p{font-size:11px;color:#888;margin-top:2px}
+.badge{display:inline-block;background:#ff6b00;color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;text-transform:uppercase;margin-top:6px}
+.card,.res-top,.sketch{background:#fff;padding:14px 18px;border-left:1px solid #eee;border-right:1px solid #eee}
+.res-top,.sketch,.card+.card{border-top:1px solid #f0f0f0}
+.st{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.pc{background:#1a1a1a;border-radius:8px;padding:14px;text-align:center;margin-bottom:12px}
+.pl{font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px}
+.pd{font-size:22px;font-weight:800;color:#ff6b00}
+.pu{font-size:10px;color:#666;margin-top:1px}
+.rg{display:grid;grid-template-columns:1fr 1px 1fr}
+.ri{text-align:center;padding:8px}
+.rd{background:#ffd5b0}
+.rlb{font-size:10px;color:#999;margin-bottom:3px}
+.rval{font-size:24px;font-weight:800;color:#ff6b00;line-height:1}
+.run{font-size:11px;color:#888;margin-top:1px}
+.etag{display:inline-block;background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700}
+.dw{display:flex;justify-content:center;overflow-x:auto;padding:4px 0}
+.row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5}
+.row:last-child{border-bottom:none}
+.rl{font-size:12px;color:#777}
+.rv{font-size:12px;font-weight:600;color:#1a1a1a}
+.warn-top{background:#1a1a1a;color:#ff6b00;padding:10px 16px;font-size:11px;font-weight:700;border-left:1px solid #eee;border-right:1px solid #eee;line-height:1.5}
+.warn-bot{background:#fff8f0;border-left:4px solid #e53935;padding:10px 14px;font-size:11px;color:#b71c1c;line-height:1.5;font-weight:600;border-right:1px solid #eee}
+.ftr{background:#1a1a1a;color:#555;padding:10px 20px;border-radius:0 0 12px 12px;font-size:10px;text-align:center}
+.ftr span{color:#ff6b00}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hdr"><h1>Geomembrana Geossintéticos</h1><p>Estimativa Técnica de Material</p><span class="badge" id="badge">...</span></div>
+<div class="warn-top" id="warn">ESTIMATIVA</div>
+<div class="res-top">
+<div class="st">Dimensionamento</div>
+<div class="pc"><div class="pl">Dimensão da Peça Necessária</div><div class="pd" id="peca">...</div><div class="pu" id="pecu">metros</div></div>
+<div class="rg">
+<div class="ri"><div class="rlb">Área Total</div><div class="rval" id="area">...</div><div class="run">m²</div></div>
+<div class="rd"></div>
+<div class="ri"><div class="rlb">Espessura Indicada</div><div style="margin-top:6px"><span class="etag" id="esp">...</span></div></div>
+</div>
+</div>
+<div class="sketch"><div class="st">Esboço Técnico — Vista Superior</div><div class="dw" id="svg"></div></div>
+<div class="card"><div class="st">Dados Informados</div><div id="dados"></div></div>
+<div class="card"><div class="st">Detalhamento</div><div id="det"></div></div>
+<div class="warn-bot">⚠️ Esses cálculos podem conter erro. Sempre valide com profissional responsável antes da execução.</div>
+<div class="ftr">Calculado por <span>Geovana</span> · Geomembrana Geossintéticos · lojageomembrana.com.br</div>
+</div>
+<script>
+var P=new URLSearchParams(location.search);
+var tipo=P.get('tipo')||'retangular';
+var L=+P.get('l')||0, C=+P.get('c')||0, H=+P.get('p')||0, D=+P.get('d')||0;
+var anc=P.get('anc_inclusa')==='1';
+var pi=Math.PI, sq2=Math.SQRT2;
+
+function f(n){return isNaN(n)?'0':parseFloat(n.toFixed(2)).toLocaleString('pt-BR')}
+function fM(n){return isNaN(n)?'0':Math.ceil(n).toString()}
+function esp(h){return h<=1.5?'0,50mm':h<=4?'0,80mm':h<=10?'1,00mm':h<=15?'1,50mm':'2,00mm'}
+
+document.getElementById('badge').textContent=tipo==='retangular'?'Retangular':'Cilíndrico';
+
+if(tipo==='retangular'){
+  document.getElementById('warn').textContent='ESTIMATIVA — Valores calculados assumindo talude 45° e margem 5%. Para projeto executivo, passar informações completas.';
+  var t=H*sq2, a=1.0, Li=L-2*H, Ci=C-2*H, pL, pC, area;
+  if(anc){pL=L;pC=C;area=L*C;}
+  else{pL=1.05*(2*a+Li+2*t);pC=1.05*(2*a+Ci+2*t);area=pL*pC;}
+  document.getElementById('peca').textContent=f(pL)+' × '+f(pC);
+  document.getElementById('pecu').textContent='metros (Largura × Comprimento)';
+  document.getElementById('area').textContent=f(area);
+  document.getElementById('esp').textContent=esp(H);
+  document.getElementById('dados').innerHTML='<div class="row"><span class="rl">Comprimento</span><span class="rv">'+f(L)+'m</span></div><div class="row"><span class="rl">Largura</span><span class="rv">'+f(C)+'m</span></div><div class="row"><span class="rl">Profundidade</span><span class="rv">'+f(H)+'m</span></div><div class="row"><span class="rl">Talude</span><span class="rv">45° (assumido)</span></div><div class="row"><span class="rl">Ancoragem</span><span class="rv">'+(anc?'Incluída nas medidas':'1,60m por lado')+'</span></div>';
+  document.getElementById('det').innerHTML='<div class="row"><span class="rl">Fundo comprimento</span><span class="rv">'+f(Li)+'m</span></div><div class="row"><span class="rl">Fundo largura</span><span class="rv">'+f(Ci)+'m</span></div><div class="row"><span class="rl">Talude (45°)</span><span class="rv">'+f(t)+'m</span></div><div class="row"><span class="rl">Margem</span><span class="rv">5%</span></div><div class="row"><span class="rl">Área total</span><span class="rv">'+f(area)+'m²</span></div>';
+  var W=320,Hs=240,rt=pL>0&&pC>0?Math.min((W-60)/pL,(Hs-60)/pC):1;
+  var ew=Math.min(pL*rt,W-60)||200, eh=Math.min(pC*rt,Hs-60)||140;
+  var ex=(W-ew)/2, ey=(Hs-eh)/2, sc=pL>0?ew/pL:1;
+  var ap=a*1.05*sc, tp=t*1.05*sc, bp=ap+tp;
+  var fh=ew>0?eh/ew:1, aph=ap*fh, bph=aph+tp*fh;
+  var ix=ex+bp, iy=ey+bph, iw=Math.max(ew-2*bp,4), ih=Math.max(eh-2*bph,4);
+  var bx=ex+ap, by=ey+aph, bw=Math.max(ew-2*ap,4), bh=Math.max(eh-2*aph,4);
+  var dk='<defs><marker id="r1" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M5,0L5,5L0,2.5z" fill="#e53935"/></marker><marker id="r2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0L0,5L5,2.5z" fill="#e53935"/></marker><marker id="b1" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M5,0L5,5L0,2.5z" fill="#1976d2"/></marker><marker id="b2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0L0,5L5,2.5z" fill="#1976d2"/></marker></defs>';
+  document.getElementById('svg').innerHTML='<svg width="'+W+'" height="'+Hs+'" viewBox="0 0 '+W+' '+Hs+'" style="background:#fff">'+dk+'<rect x="'+ex+'" y="'+ey+'" width="'+ew+'" height="'+eh+'" fill="#fff8f0" stroke="#ff6b00" stroke-width="2" stroke-dasharray="6,3"/><rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="4,2"/><rect x="'+ix+'" y="'+iy+'" width="'+iw+'" height="'+ih+'" fill="#d0e8ff" stroke="#1976d2" stroke-width="1.5"/><line x1="'+ex+'" y1="'+ey+'" x2="'+ix+'" y2="'+iy+'" stroke="#888" stroke-width="1"/><line x1="'+(ex+ew)+'" y1="'+ey+'" x2="'+(ix+iw)+'" y2="'+iy+'" stroke="#888" stroke-width="1"/><line x1="'+ex+'" y1="'+(ey+eh)+'" x2="'+ix+'" y2="'+(iy+ih)+'" stroke="#888" stroke-width="1"/><line x1="'+(ex+ew)+'" y1="'+(ey+eh)+'" x2="'+(ix+iw)+'" y2="'+(iy+ih)+'" stroke="#888" stroke-width="1"/><text x="'+(ix+iw/2)+'" y="'+(iy+ih/2+4)+'" text-anchor="middle" font-size="9" fill="#1976d2" font-weight="bold">FUNDO</text><text x="'+(ix+iw/2)+'" y="'+(iy+ih/2+16)+'" text-anchor="middle" font-size="8" fill="#1976d2">'+f(Li)+'x'+f(Ci)+'m</text><line x1="'+ex+'" y1="'+(ey-14)+'" x2="'+(ex+ew)+'" y2="'+(ey-14)+'" stroke="#e53935" stroke-width="1.2" marker-start="url(#r1)" marker-end="url(#r2)"/><text x="'+(ex+ew/2)+'" y="'+(ey-17)+'" text-anchor="middle" font-size="8" fill="#e53935" font-weight="bold">'+f(pL)+'m</text><line x1="'+(ex-14)+'" y1="'+ey+'" x2="'+(ex-14)+'" y2="'+(ey+eh)+'" stroke="#e53935" stroke-width="1.2" marker-start="url(#r1)" marker-end="url(#r2)"/><text x="'+(ex-17)+'" y="'+(ey+eh/2+3)+'" text-anchor="end" font-size="8" fill="#e53935" transform="rotate(-90,'+(ex-17)+','+(ey+eh/2+3)+')">'+f(pC)+'m</text><line x1="'+ix+'" y1="'+(iy+ih+10)+'" x2="'+(ix+iw)+'" y2="'+(iy+ih+10)+'" stroke="#1976d2" stroke-width="1" marker-start="url(#b1)" marker-end="url(#b2)"/><text x="'+(ix+iw/2)+'" y="'+(iy+ih+21)+'" text-anchor="middle" font-size="7.5" fill="#1976d2">'+f(Li)+'m</text><line x1="'+(ix+iw+10)+'" y1="'+iy+'" x2="'+(ix+iw+10)+'" y2="'+(iy+ih)+'" stroke="#1976d2" stroke-width="1" marker-start="url(#b1)" marker-end="url(#b2)"/><text x="'+(ix+iw+22)+'" y="'+(iy+ih/2+3)+'" text-anchor="start" font-size="7.5" fill="#1976d2">'+f(Ci)+'m</text></svg>';
+} else {
+  document.getElementById('warn').textContent='ESTIMATIVA — Valores calculados com margem 10%. Para projeto executivo, passar informações completas.';
+  var ac=1.5, r=D/2, ab=pi*r*r, al=pi*D*(H+ac), area=(ab+al)*1.10, dc=pi*(ac+D+ac);
+  document.getElementById('peca').textContent='Corte: '+fM(dc)+'m';
+  document.getElementById('pecu').textContent='metros (perímetro de corte)';
+  document.getElementById('area').textContent=f(area);
+  document.getElementById('esp').textContent=esp(H);
+  document.getElementById('dados').innerHTML='<div class="row"><span class="rl">Diâmetro</span><span class="rv">'+f(D)+'m</span></div><div class="row"><span class="rl">Profundidade</span><span class="rv">'+f(H)+'m</span></div><div class="row"><span class="rl">Ancoragem Crista</span><span class="rv">1,50m</span></div>';
+  document.getElementById('det').innerHTML='<div class="row"><span class="rl">Área base</span><span class="rv">'+f(ab)+'m²</span></div><div class="row"><span class="rl">Área lateral</span><span class="rv">'+f(al)+'m²</span></div><div class="row"><span class="rl">Margem</span><span class="rv">10%</span></div><div class="row"><span class="rl">Área total</span><span class="rv">'+f(area)+'m²</span></div>';
+  var cxc=155,cyc=110,rE=70,dp=50;
+  var dk2='<defs><marker id="r1" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M5,0L5,5L0,2.5z" fill="#e53935"/></marker><marker id="r2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0L0,5L5,2.5z" fill="#e53935"/></marker></defs>';
+  document.getElementById('svg').innerHTML='<svg width="310" height="200" viewBox="0 0 310 200" style="background:#fff">'+dk2+'<ellipse cx="'+cxc+'" cy="'+(cyc+dp/2)+'" rx="'+rE+'" ry="'+(rE*0.28)+'" fill="#b3d7ff" stroke="#1976d2" stroke-width="1"/><rect x="'+(cxc-rE)+'" y="'+(cyc-dp/2)+'" width="'+(rE*2)+'" height="'+dp+'" fill="#e8f4ff"/><line x1="'+(cxc-rE)+'" y1="'+(cyc-dp/2)+'" x2="'+(cxc-rE)+'" y2="'+(cyc+dp/2)+'" stroke="#1976d2" stroke-width="1.2"/><line x1="'+(cxc+rE)+'" y1="'+(cyc-dp/2)+'" x2="'+(cxc+rE)+'" y2="'+(cyc+dp/2)+'" stroke="#1976d2" stroke-width="1.2"/><ellipse cx="'+cxc+'" cy="'+(cyc-dp/2)+'" rx="'+rE+'" ry="'+(rE*0.28)+'" fill="#d0e8ff" stroke="#1976d2" stroke-width="1.5"/><text x="'+cxc+'" y="'+(cyc+5)+'" text-anchor="middle" font-size="9" fill="#1976d2" font-weight="bold">D='+f(D)+'m</text><line x1="'+(cxc-rE)+'" y1="'+(cyc-dp/2-12)+'" x2="'+(cxc+rE)+'" y2="'+(cyc-dp/2-12)+'" stroke="#e53935" stroke-width="1.2" marker-start="url(#r1)" marker-end="url(#r2)"/><text x="'+cxc+'" y="'+(cyc-dp/2-15)+'" text-anchor="middle" font-size="8" fill="#e53935" font-weight="bold">corte '+f(dc)+'m</text><line x1="'+(cxc+rE+10)+'" y1="'+(cyc-dp/2)+'" x2="'+(cxc+rE+10)+'" y2="'+(cyc+dp/2)+'" stroke="#c62828" stroke-width="1" marker-start="url(#r1)" marker-end="url(#r2)"/><text x="'+(cxc+rE+22)+'" y="'+(cyc+4)+'" font-size="8" fill="#c62828" font-weight="bold">'+f(H)+'m</text></svg>';
+}
+</script>
+</body>
+                                                                    </html>
