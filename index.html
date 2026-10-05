@@ -117,9 +117,10 @@ function mkMarkers(id,color){
 document.getElementById('badge').textContent=tipo==='retangular'?'Retangular':'Cilíndrico';
 
 if(tipo==='retangular'){
-  var t=H*sq2, a=1.6, Li=L-2*H, Ci=C-2*H, pL,pC,area;
-  if(anc){pL=L;pC=C;area=L*C;}
-  else{pL=1.05*(2*a+Li+2*t);pC=1.05*(2*a+Ci+2*t);area=pL*pC;}
+  // Se a ancoragem já está incluída nas medidas informadas, a boca real é L-2a / C-2a.
+  // O cálculo (profundidade, talude, margem) continua igual — só não soma a ancoragem de novo.
+  var t=H*sq2, a=1.6, Lb=anc?L-2*a:L, Cb=anc?C-2*a:C, Li=Lb-2*H, Ci=Cb-2*H, pL,pC,area;
+  pL=1.05*(2*a+Li+2*t);pC=1.05*(2*a+Ci+2*t);area=pL*pC;
 
   // Arredondar peça para cima
   var pLr=Math.ceil(pL), pCr=Math.ceil(pC);
@@ -129,8 +130,8 @@ if(tipo==='retangular'){
   document.getElementById('area').textContent=f(area);
   document.getElementById('esp').textContent=esp(H);
   document.getElementById('dados').innerHTML=
-    '<div class="row"><span class="rl">Largura (boca)</span><span class="rv">'+f(L)+'m</span></div>'+
-    '<div class="row"><span class="rl">Comprimento (boca)</span><span class="rv">'+f(C)+'m</span></div>'+
+    '<div class="row"><span class="rl">'+(anc?'Largura (informada, c/ ancoragem)':'Largura (boca)')+'</span><span class="rv">'+f(L)+'m</span></div>'+
+    '<div class="row"><span class="rl">'+(anc?'Comprimento (informado, c/ ancoragem)':'Comprimento (boca)')+'</span><span class="rv">'+f(C)+'m</span></div>'+
     '<div class="row"><span class="rl">Profundidade</span><span class="rv">'+f(H)+'m</span></div>'+
     '<div class="row"><span class="rl">Talude</span><span class="rv">45° (assumido)</span></div>'+
     '<div class="row"><span class="rl">Ancoragem</span><span class="rv">'+(anc?'Incluída nas medidas':'1,60m por lado (em '+(H>2?'U':'L')+')')+'</span></div>';
